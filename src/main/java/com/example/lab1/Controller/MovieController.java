@@ -11,6 +11,12 @@ import java.util.List;
 public class MovieController {
     private final MovieService movieService;
 
+    // Запрос к внешнему API (OMDb)
+    @GetMapping("/search")
+    public String searchMovie(@RequestParam String title) {
+        return movieService.getMovieInfoByTitle(title);
+    }
+
     public MovieController(MovieService movieService) {
         this.movieService = movieService;
     }

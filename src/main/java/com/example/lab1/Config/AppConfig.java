@@ -14,11 +14,7 @@ public class AppConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager(
-                CacheNames.MOVIES,
-                CacheNames.ACTORS,
-                CacheNames.MOVIE_INFO
-        );
+        return new ConcurrentMapCacheManager(CacheNames.MOVIES, CacheNames.ACTORS, CacheNames.MOVIE_INFO);
     }
 
     @Bean

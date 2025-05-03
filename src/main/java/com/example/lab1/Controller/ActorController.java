@@ -2,6 +2,7 @@ package com.example.lab1.Controller;
 
 import com.example.lab1.Entity.Actor;
 import com.example.lab1.Service.ActorService;
+import com.example.lab1.Service.RequestCounter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,11 +29,13 @@ import java.util.List;
 public class ActorController {
 
     private final ActorService actorService;
+    private final RequestCounter requestCounter;
 
     @Operation(summary = "Get all actors")
     @ApiResponse(responseCode = "200", description = "List of all actors")
     @GetMapping
     public ResponseEntity<List<Actor>> getAllActors() {
+        requestCounter.increment();
         return ResponseEntity.ok(actorService.getAllActors());
     }
 
@@ -45,6 +48,7 @@ public class ActorController {
                     required = true,
                     example = "1")
             @PathVariable Long movieId) {
+        requestCounter.increment();
         return ResponseEntity.ok(actorService.getActorsByMovieId(movieId));
     }
 
@@ -57,6 +61,7 @@ public class ActorController {
                     required = true,
                     example = "John")
             @RequestParam String name) {
+        requestCounter.increment();
         return ResponseEntity.ok(actorService.findActorsByNameContaining(name));
     }
 
@@ -74,6 +79,7 @@ public class ActorController {
                     required = true,
                     example = "1")
             @PathVariable Long movieId) {
+        requestCounter.increment();
         return new ResponseEntity<>(actorService.saveActor(actor, movieId), HttpStatus.CREATED);
     }
 
@@ -86,7 +92,21 @@ public class ActorController {
                     required = true,
                     example = "1")
             @PathVariable Long id) {
+        requestCounter.increment();
         actorService.deleteActor(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Create multiple actors")
+    @ApiResponse(responseCode = "201", description = "Actors created successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid actor data")
+    @PostMapping("/bulk")
+    public ResponseEntity<List<Actor>> createActorsBulk(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "List of actor data to create",
+                    required = true)
+            @Valid @RequestBody List<Actor> actors) {
+        requestCounter.increment();
+        return new ResponseEntity<>(actorService.saveActorsBulk(actors), HttpStatus.CREATED);
     }
 }

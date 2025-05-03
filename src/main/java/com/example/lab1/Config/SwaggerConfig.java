@@ -18,9 +18,9 @@ import org.springframework.context.annotation.Configuration;
                 version = "1.0.0",
                 description = "API for managing movies and actors information",
                 contact = @Contact(
-                        name = "Vladislav",
+                        name = "Vinnik Vladislav",
                         email = "vinnik_vladislav1309@mail.ru",
-                        url = "idk"
+                        url = "https://t.me/vldslvsrgv4"
                 ),
                 license = @License(
                         name = "Apache 2.0",

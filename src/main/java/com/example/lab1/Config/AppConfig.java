@@ -1,5 +1,6 @@
 package com.example.lab1.Config;
 
+import com.example.lab1.Service.RequestCounter;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -22,5 +23,10 @@ public class AppConfig {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
         return restTemplate;
+    }
+
+    @Bean
+    public RequestCounter requestCounter() {
+        return new RequestCounter();
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -62,5 +63,30 @@ public class ActorService {
             throw new EntityNotFoundException("Actor not found with id: " + id);
         }
         actorRepository.deleteById(id);
+    }
+
+    @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
+    @Transactional
+    public List<Actor> saveActorsBulk(List<Actor> actors) {
+        log.info("Saving {} actors in bulk", actors.size());
+
+        return actors.stream()
+                .filter(actor -> actor.getName() != null && !actor.getName().trim().isEmpty())
+                .map(actor -> {
+                    if (actor.getMovie() == null || actor.getMovie().getId() == null) {
+                        throw new IllegalArgumentException("Movie ID must be specified for each actor");
+                    }
+
+                    Movie movie = movieRepository.findById(actor.getMovie().getId())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Movie not found with id: " + actor.getMovie().getId()));
+
+                    Actor newActor = new Actor();
+                    newActor.setName(actor.getName());
+                    newActor.setMovie(movie);
+
+                    return actorRepository.save(newActor);
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -1,0 +1,15 @@
+package com.example.lab1.Service;
+import org.springframework.stereotype.Service;
+
+@Service
+public class RequestCounter {
+    private int count = 0;
+
+    public synchronized void increment() {
+        count++;
+    }
+
+    public synchronized int getCount() {
+        return count;
+    }
+}

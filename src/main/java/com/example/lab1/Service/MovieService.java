@@ -1,6 +1,7 @@
 package com.example.lab1.Service;
 
 import com.example.lab1.Config.CacheNames;
+import com.example.lab1.Entity.Actor;
 import com.example.lab1.Entity.Movie;
 import com.example.lab1.Exception.EntityNotFoundException;
 import com.example.lab1.Exception.ExternalServiceException;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -67,5 +69,32 @@ public class MovieService {
             throw new EntityNotFoundException("Movie not found with id: " + id);
         }
         movieRepository.deleteById(id);
+    }
+
+    @CacheEvict(value = CacheNames.MOVIES, key = "'all'")
+    @Transactional
+    public List<Movie> saveMoviesBulk(List<Movie> movies) {
+        log.info("Saving {} movies in bulk", movies.size());
+
+        return movies.stream()
+                .filter(movie -> movie.getTitle() != null && !movie.getTitle().trim().isEmpty())
+                .map(movie -> {
+                    Movie newMovie = new Movie();
+                    newMovie.setTitle(movie.getTitle());
+
+                    if (movie.getActors() != null && !movie.getActors().isEmpty()) {
+                        newMovie.setActors(movie.getActors().stream()
+                                .map(actor -> {
+                                    Actor newActor = new Actor();
+                                    newActor.setName(actor.getName());
+                                    newActor.setMovie(newMovie);
+                                    return newActor;
+                                })
+                                .collect(Collectors.toList()));
+                    }
+
+                    return movieRepository.save(newMovie);
+                })
+                .collect(Collectors.toList());
     }
 }

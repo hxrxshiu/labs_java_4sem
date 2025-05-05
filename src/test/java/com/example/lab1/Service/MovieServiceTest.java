@@ -64,10 +64,10 @@ class MovieServiceTest {
 
     @Test
     void shouldSaveMovie() {
-        Movie movie = new Movie();
-        movie.setTitle("Test Movie");
+        Movie movie = mock(Movie.class);
+        when(movie.getTitle()).thenReturn("Test Movie");
 
-        when(movieRepository.save(any())).thenReturn(movie);
+        when(movieRepository.save(any(Movie.class))).thenReturn(movie);
 
         Movie result = movieService.saveMovie(movie);
 
@@ -93,28 +93,33 @@ class MovieServiceTest {
 
     @Test
     void shouldSaveMoviesInBulkWhenAllValid() {
-        List<Movie> movies = Arrays.asList(
-                createTestMovie("Movie 1"),
-                createTestMovie("Movie 2")
-        );
+        Movie movie1 = mock(Movie.class);
+        when(movie1.getTitle()).thenReturn("Movie 1");
 
-        when(movieRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        Movie movie2 = mock(Movie.class);
+        when(movie2.getTitle()).thenReturn("Movie 2");
+
+        List<Movie> movies = Arrays.asList(movie1, movie2);
+
+        when(movieRepository.save(any(Movie.class))).thenAnswer(i -> i.getArgument(0));
 
         List<Movie> result = movieService.saveMoviesBulk(movies);
 
         assertEquals(2, result.size());
-        verify(movieRepository, times(2)).save(any());
+        verify(movieRepository, times(2)).save(any(Movie.class));
     }
 
     @Test
     void shouldFilterInvalidMoviesWhenSavingInBulk() {
-        List<Movie> movies = Arrays.asList(
-                createTestMovie(""),
-                createTestMovie("Valid Movie"),
-                createTestMovie(null)
-        );
+        Movie invalidMovie = mock(Movie.class);
+        when(invalidMovie.getTitle()).thenReturn("");
 
-        when(movieRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        Movie validMovie = mock(Movie.class);
+        when(validMovie.getTitle()).thenReturn("Valid Movie");
+
+        List<Movie> movies = Arrays.asList(invalidMovie, validMovie, null);
+
+        when(movieRepository.save(any(Movie.class))).thenAnswer(i -> i.getArgument(0));
 
         List<Movie> result = movieService.saveMoviesBulk(movies);
 
@@ -124,14 +129,18 @@ class MovieServiceTest {
 
     @Test
     void shouldSaveMoviesWithActorsInBulk() {
-        Movie movie = createTestMovie("Movie with Actors");
-        Actor actor1 = new Actor();
-        actor1.setName("Actor 1");
-        Actor actor2 = new Actor();
-        actor2.setName("Actor 2");
+        Movie movie = mock(Movie.class);
+        when(movie.getTitle()).thenReturn("Movie with Actors");
+
+        Actor actor1 = mock(Actor.class);
+        when(actor1.getName()).thenReturn("Actor 1");
+
+        Actor actor2 = mock(Actor.class);
+        when(actor2.getName()).thenReturn("Actor 2");
+
         movie.setActors(Arrays.asList(actor1, actor2));
 
-        when(movieRepository.save(any())).thenAnswer(i -> {
+        when(movieRepository.save(any(Movie.class))).thenAnswer(i -> {
             Movie m = i.getArgument(0);
             m.getActors().forEach(a -> a.setId(1L));
             return m;
@@ -141,11 +150,5 @@ class MovieServiceTest {
 
         assertEquals(2, result.get(0).getActors().size());
         assertEquals("Actor 1", result.get(0).getActors().get(0).getName());
-    }
-
-    private Movie createTestMovie(String title) {
-        Movie movie = new Movie();
-        movie.setTitle(title);
-        return movie;
     }
 }

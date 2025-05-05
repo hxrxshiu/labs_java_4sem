@@ -19,10 +19,12 @@ public class MovieActorService {
 
     private final ActorRepository actorRepository;
     private final MovieRepository movieRepository;
+    private final RequestCounter requestCounter;
 
     @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
     @Transactional
     public Actor addActorToMovie(Long movieId, Actor actorRequest) {
+        requestCounter.increment();
         log.info("Adding actor to movie ID: {}", movieId);
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found with id: " + movieId));
@@ -34,3 +36,4 @@ public class MovieActorService {
         return actorRepository.save(actor);
     }
 }
+

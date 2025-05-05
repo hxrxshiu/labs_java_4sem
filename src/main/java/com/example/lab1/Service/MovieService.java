@@ -33,15 +33,15 @@ public class MovieService {
     @Value("${movie-database.api.key}")
     private String omdbApiKey;
 
-    public List<Movie> getAllMovies() {
+    @Cacheable(value = CacheNames.MOVIES, key = "'all'")
+    public List<Movie> getAllMoviesCached() {
         requestCounter.increment();
         log.debug("Fetching all movies from database");
         return movieRepository.findAll();
     }
 
-    @Cacheable(value = CacheNames.MOVIES, key = "'all'")
-    public List<Movie> getAllMoviesCached() {
-        return getAllMovies();
+    public List<Movie> getAllMovies() {
+        return getAllMoviesCached();
     }
 
     public String getMovieInfoByTitle(String title) {
@@ -107,4 +107,5 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 }
+
 

@@ -32,7 +32,7 @@ class MovieServiceTest {
     private MovieService movieService;
 
     @Test
-    void TestGetAllMovies() {
+    void shouldReturnAllMovies() {
         Movie movie = mock(Movie.class);
         when(movie.getTitle()).thenReturn("Test Movie");
         when(movieRepository.findAll()).thenReturn(Collections.singletonList(movie));
@@ -44,7 +44,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestGetMovieInfoByTitle() {
+    void shouldReturnMovieInfoByTitle() {
         String response = "{\"Title\":\"Inception\",\"Year\":\"2010\"}";
         when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(response);
 
@@ -55,7 +55,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestGetMovieInfoByTitleThrowsExceptionWhenApiReturnsError() {
+    void shouldThrowExceptionWhenApiReturnsError() {
         String response = "{\"Error\":\"Movie not found\"}";
         when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(response);
 
@@ -63,7 +63,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestSaveMovie() {
+    void shouldSaveMovie() {
         Movie movie = new Movie();
         movie.setTitle("Test Movie");
 
@@ -76,7 +76,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestDeleteMovieWhenExists() {
+    void shouldDeleteMovieWhenExists() {
         when(movieRepository.existsById(1L)).thenReturn(true);
 
         movieService.deleteMovie(1L);
@@ -85,14 +85,14 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestDeleteMovieThrowsExceptionWhenNotFound() {
+    void shouldThrowExceptionWhenMovieNotFoundDuringDelete() {
         when(movieRepository.existsById(1L)).thenReturn(false);
 
         assertThrows(EntityNotFoundException.class, () -> movieService.deleteMovie(1L));
     }
 
     @Test
-    void TestSaveMoviesBulkWhenAllValid() {
+    void shouldSaveMoviesInBulkWhenAllValid() {
         List<Movie> movies = Arrays.asList(
                 createTestMovie("Movie 1"),
                 createTestMovie("Movie 2")
@@ -107,7 +107,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestSaveMoviesBulkFiltersInvalidMovies() {
+    void shouldFilterInvalidMoviesWhenSavingInBulk() {
         List<Movie> movies = Arrays.asList(
                 createTestMovie(""),
                 createTestMovie("Valid Movie"),
@@ -123,7 +123,7 @@ class MovieServiceTest {
     }
 
     @Test
-    void TestSaveMoviesBulkWhenMovieHasActors() {
+    void shouldSaveMoviesWithActorsInBulk() {
         Movie movie = createTestMovie("Movie with Actors");
         Actor actor1 = new Actor();
         actor1.setName("Actor 1");

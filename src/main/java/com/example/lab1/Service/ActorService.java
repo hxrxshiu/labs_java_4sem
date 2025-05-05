@@ -25,29 +25,30 @@ public class ActorService {
     private final MovieRepository movieRepository;
     private final RequestCounter requestCounter;
 
-    public List<Actor> getAllActors() {
+    @Cacheable(value = CacheNames.ACTORS, key = "'all'")
+    public List<Actor> getAllActorsCached() {
         requestCounter.increment();
         log.debug("Fetching all actors from database");
         return actorRepository.findAll();
     }
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'all'")
-    public List<Actor> getAllActorsCached() {
-        return getAllActors();
+    public List<Actor> getAllActors() {
+        return getAllActorsCached();
     }
 
-    public List<Actor> getActorsByMovieId(Long movieId) {
+    @Cacheable(value = CacheNames.ACTORS, key = "'movie_' + #movieId")
+    public List<Actor> getActorsByMovieIdCached(Long movieId) {
         requestCounter.increment();
         log.debug("Fetching actors for movie ID: {}", movieId);
         return actorRepository.findByMovieId(movieId);
     }
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'movie_' + #movieId")
-    public List<Actor> getActorsByMovieIdCached(Long movieId) {
-        return getActorsByMovieId(movieId);
+    public List<Actor> getActorsByMovieId(Long movieId) {
+        return getActorsByMovieIdCached(movieId);
     }
 
-    public List<Actor> findActorsByNameContaining(String namePart) {
+    @Cacheable(value = CacheNames.ACTORS, key = "'search_' + #namePart.toLowerCase()")
+    public List<Actor> findActorsByNameContainingCached(String namePart) {
         requestCounter.increment();
         log.debug("Searching actors containing name: {}", namePart);
         if (namePart == null || namePart.trim().isEmpty()) {
@@ -56,9 +57,8 @@ public class ActorService {
         return actorRepository.findByNameContainingIgnoreCase(namePart);
     }
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'search_' + #namePart.toLowerCase()")
-    public List<Actor> findActorsByNameContainingCached(String namePart) {
-        return findActorsByNameContaining(namePart);
+    public List<Actor> findActorsByNameContaining(String namePart) {
+        return findActorsByNameContainingCached(namePart);
     }
 
     @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
@@ -109,3 +109,4 @@ public class ActorService {
                 .collect(Collectors.toList());
     }
 }
+

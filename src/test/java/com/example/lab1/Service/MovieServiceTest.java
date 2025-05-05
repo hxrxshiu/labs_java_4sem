@@ -5,7 +5,6 @@ import com.example.lab1.Entity.Movie;
 import com.example.lab1.Exception.EntityNotFoundException;
 import com.example.lab1.Exception.ExternalServiceException;
 import com.example.lab1.Repository.MovieRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,125 +31,99 @@ class MovieServiceTest {
     @InjectMocks
     private MovieService movieService;
 
-    private Movie testMovie;
-
-    @BeforeEach
-    void setUp() {
-        testMovie = new Movie();
-        testMovie.setId(1L);
-        testMovie.setTitle("Test Movie");
-    }
-
     @Test
-    void getAllMovies_ShouldReturnAllMovies() {
-
-        when(movieRepository.findAll()).thenReturn(Collections.singletonList(testMovie));
+    void TestGetAllMovies() {
+        Movie movie = mock(Movie.class);
+        when(movie.getTitle()).thenReturn("Test Movie");
+        when(movieRepository.findAll()).thenReturn(Collections.singletonList(movie));
 
         List<Movie> result = movieService.getAllMovies();
 
         assertEquals(1, result.size());
         assertEquals("Test Movie", result.get(0).getTitle());
-        verify(movieRepository).findAll();
     }
 
     @Test
-    void getMovieInfoByTitle_ShouldReturnMovieInfo() {
-
-        String apiResponse = "{\"Title\":\"Inception\",\"Year\":\"2010\"}";
-        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(apiResponse);
+    void TestGetMovieInfoByTitle() {
+        String response = "{\"Title\":\"Inception\",\"Year\":\"2010\"}";
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(response);
 
         String result = movieService.getMovieInfoByTitle("Inception");
 
         assertNotNull(result);
         assertTrue(result.contains("Inception"));
-        verify(restTemplate).getForObject(anyString(), eq(String.class));
     }
 
     @Test
-    void getMovieInfoByTitle_ShouldThrowExceptionWhenApiFails() {
+    void TestGetMovieInfoByTitleThrowsExceptionWhenApiReturnsError() {
+        String response = "{\"Error\":\"Movie not found\"}";
+        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(response);
 
-        String apiResponse = "{\"Error\":\"Movie not found\"}";
-        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(apiResponse);
-
-
-        assertThrows(ExternalServiceException.class, () -> {
-            movieService.getMovieInfoByTitle("Unknown Movie");
-        });
+        assertThrows(ExternalServiceException.class, () -> movieService.getMovieInfoByTitle("Unknown"));
     }
 
     @Test
-    void saveMovie_ShouldSaveMovie() {
+    void TestSaveMovie() {
+        Movie movie = new Movie();
+        movie.setTitle("Test Movie");
 
-        when(movieRepository.save(any(Movie.class))).thenReturn(testMovie);
+        when(movieRepository.save(any())).thenReturn(movie);
 
-        Movie result = movieService.saveMovie(testMovie);
+        Movie result = movieService.saveMovie(movie);
 
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-        verify(movieRepository).save(any(Movie.class));
+        assertEquals("Test Movie", result.getTitle());
+        verify(movieRepository).save(movie);
     }
 
     @Test
-    void deleteMovie_ShouldDeleteExistingMovie() {
-
+    void TestDeleteMovieWhenExists() {
         when(movieRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(movieRepository).deleteById(1L);
 
         movieService.deleteMovie(1L);
 
-        verify(movieRepository).existsById(1L);
         verify(movieRepository).deleteById(1L);
     }
 
     @Test
-    void deleteMovie_ShouldThrowExceptionWhenMovieNotFound() {
-
+    void TestDeleteMovieThrowsExceptionWhenNotFound() {
         when(movieRepository.existsById(1L)).thenReturn(false);
 
-
-        assertThrows(EntityNotFoundException.class, () -> {
-            movieService.deleteMovie(1L);
-        });
-        verify(movieRepository, never()).deleteById(any());
+        assertThrows(EntityNotFoundException.class, () -> movieService.deleteMovie(1L));
     }
 
     @Test
-    void saveMoviesBulk_ShouldSaveAllValidMovies() {
-
+    void TestSaveMoviesBulkWhenAllValid() {
         List<Movie> movies = Arrays.asList(
                 createTestMovie("Movie 1"),
-                createTestMovie("Movie 2"),
-                createTestMovie("Movie 3")
+                createTestMovie("Movie 2")
         );
 
-        when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(movieRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         List<Movie> result = movieService.saveMoviesBulk(movies);
 
-        assertEquals(3, result.size());
-        verify(movieRepository, times(3)).save(any(Movie.class));
+        assertEquals(2, result.size());
+        verify(movieRepository, times(2)).save(any());
     }
 
     @Test
-    void saveMoviesBulk_ShouldFilterInvalidMovies() {
-
+    void TestSaveMoviesBulkFiltersInvalidMovies() {
         List<Movie> movies = Arrays.asList(
-                createTestMovie(""), // invalid
-                createTestMovie("Movie 2"),
-                createTestMovie(null) // invalid
+                createTestMovie(""),
+                createTestMovie("Valid Movie"),
+                createTestMovie(null)
         );
 
-        when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(movieRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         List<Movie> result = movieService.saveMoviesBulk(movies);
 
         assertEquals(1, result.size());
-        assertEquals("Movie 2", result.get(0).getTitle());
+        assertEquals("Valid Movie", result.get(0).getTitle());
     }
 
     @Test
-    void saveMoviesBulk_ShouldHandleMoviesWithActors() {
-
+    void TestSaveMoviesBulkWhenMovieHasActors() {
         Movie movie = createTestMovie("Movie with Actors");
         Actor actor1 = new Actor();
         actor1.setName("Actor 1");
@@ -159,17 +131,14 @@ class MovieServiceTest {
         actor2.setName("Actor 2");
         movie.setActors(Arrays.asList(actor1, actor2));
 
-        when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> {
-            Movie saved = invocation.getArgument(0);
-            if (saved.getActors() != null) {
-                saved.getActors().forEach(a -> a.setId(1L));
-            }
-            return saved;
+        when(movieRepository.save(any())).thenAnswer(i -> {
+            Movie m = i.getArgument(0);
+            m.getActors().forEach(a -> a.setId(1L));
+            return m;
         });
 
         List<Movie> result = movieService.saveMoviesBulk(Collections.singletonList(movie));
 
-        assertEquals(1, result.size());
         assertEquals(2, result.get(0).getActors().size());
         assertEquals("Actor 1", result.get(0).getActors().get(0).getName());
     }

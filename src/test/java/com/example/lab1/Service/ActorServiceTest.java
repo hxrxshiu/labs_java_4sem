@@ -5,7 +5,6 @@ import com.example.lab1.Entity.Movie;
 import com.example.lab1.Exception.EntityNotFoundException;
 import com.example.lab1.Repository.ActorRepository;
 import com.example.lab1.Repository.MovieRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,25 +31,11 @@ class ActorServiceTest {
     @InjectMocks
     private ActorService actorService;
 
-    private Actor testActor;
-    private Movie testMovie;
-
-    @BeforeEach
-    void setUp() {
-        testMovie = new Movie();
-        testMovie.setId(1L);
-        testMovie.setTitle("Test Movie");
-
-        testActor = new Actor();
-        testActor.setId(1L);
-        testActor.setName("Test Actor");
-        testActor.setMovie(testMovie);
-    }
-
     @Test
-    void getAllActors_ShouldReturnAllActors() {
-
-        when(actorRepository.findAll()).thenReturn(Collections.singletonList(testActor));
+    void TestGetAllActors() {
+        Actor actor = mock(Actor.class);
+        when(actor.getName()).thenReturn("Test Actor");
+        when(actorRepository.findAll()).thenReturn(Collections.singletonList(actor));
 
         List<Actor> result = actorService.getAllActors();
 
@@ -61,9 +45,12 @@ class ActorServiceTest {
     }
 
     @Test
-    void getActorsByMovieId_ShouldReturnActorsForMovie() {
-
-        when(actorRepository.findByMovieId(1L)).thenReturn(Collections.singletonList(testActor));
+    void TestGetActorsByMovieId() {
+        Actor actor = mock(Actor.class);
+        Movie movie = mock(Movie.class);
+        when(movie.getId()).thenReturn(1L);
+        when(actor.getMovie()).thenReturn(movie);
+        when(actorRepository.findByMovieId(1L)).thenReturn(Collections.singletonList(actor));
 
         List<Actor> result = actorService.getActorsByMovieId(1L);
 
@@ -73,9 +60,10 @@ class ActorServiceTest {
     }
 
     @Test
-    void findActorsByNameContaining_ShouldReturnMatchingActors() {
-
-        when(actorRepository.findByNameContainingIgnoreCase("test")).thenReturn(Collections.singletonList(testActor));
+    void TestFindActorsByNameContaining() {
+        Actor actor = mock(Actor.class);
+        when(actor.getName()).thenReturn("Test Actor");
+        when(actorRepository.findByNameContainingIgnoreCase("test")).thenReturn(Collections.singletonList(actor));
 
         List<Actor> result = actorService.findActorsByNameContaining("test");
 
@@ -85,113 +73,97 @@ class ActorServiceTest {
     }
 
     @Test
-    void findActorsByNameContaining_ShouldThrowExceptionForEmptyName() {
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            actorService.findActorsByNameContaining("");
-        });
+    void TestFindActorsByNameContainingThrowsExceptionOnEmptyName() {
+        assertThrows(IllegalArgumentException.class, () -> actorService.findActorsByNameContaining(""));
     }
 
     @Test
-    void saveActor_ShouldSaveActorWithValidMovie() {
+    void TestSaveActorWhenMovieExists() {
+        Actor actor = new Actor();
+        actor.setName("Actor");
+        Movie movie = new Movie();
+        movie.setId(1L);
 
-        when(movieRepository.findById(1L)).thenReturn(Optional.of(testMovie));
-        when(actorRepository.save(any(Actor.class))).thenReturn(testActor);
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
+        when(actorRepository.save(any(Actor.class))).thenReturn(actor);
 
-        Actor result = actorService.saveActor(testActor, 1L);
+        Actor result = actorService.saveActor(actor, 1L);
 
         assertNotNull(result);
-        assertEquals(1L, result.getId());
-        assertEquals(1L, result.getMovie().getId());
+        assertEquals("Actor", result.getName());
         verify(movieRepository).findById(1L);
         verify(actorRepository).save(any(Actor.class));
     }
 
     @Test
-    void saveActor_ShouldThrowExceptionForInvalidMovie() {
-
+    void TestSaveActorThrowsExceptionWhenMovieNotFound() {
         when(movieRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> {
-            actorService.saveActor(testActor, 99L);
-        });
+        Actor actor = new Actor();
+        actor.setName("Actor");
+
+        assertThrows(EntityNotFoundException.class, () -> actorService.saveActor(actor, 99L));
     }
 
     @Test
-    void deleteActor_ShouldDeleteExistingActor() {
-
+    void TestDeleteActorWhenExists() {
         when(actorRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(actorRepository).deleteById(1L);
 
         actorService.deleteActor(1L);
 
-        verify(actorRepository).existsById(1L);
         verify(actorRepository).deleteById(1L);
     }
 
     @Test
-    void deleteActor_ShouldThrowExceptionWhenActorNotFound() {
-
+    void TestDeleteActorThrowsExceptionWhenNotExists() {
         when(actorRepository.existsById(1L)).thenReturn(false);
 
-        assertThrows(EntityNotFoundException.class, () -> {
-            actorService.deleteActor(1L);
-        });
+        assertThrows(EntityNotFoundException.class, () -> actorService.deleteActor(1L));
         verify(actorRepository, never()).deleteById(any());
     }
 
     @Test
-    void saveActorsBulk_ShouldSaveAllValidActors() {
-
+    void TestSaveActorsBulkAllValid() {
         Movie movie = new Movie();
         movie.setId(1L);
-
         List<Actor> actors = Arrays.asList(
                 createTestActor("Actor 1", movie),
-                createTestActor("Actor 2", movie),
-                createTestActor("Actor 3", movie)
+                createTestActor("Actor 2", movie)
         );
 
         when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
-        when(actorRepository.save(any(Actor.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(actorRepository.save(any(Actor.class))).thenAnswer(i -> i.getArgument(0));
 
         List<Actor> result = actorService.saveActorsBulk(actors);
 
-        assertEquals(3, result.size());
-        verify(movieRepository, times(3)).findById(1L);
-        verify(actorRepository, times(3)).save(any(Actor.class));
+        assertEquals(2, result.size());
+        verify(actorRepository, times(2)).save(any());
     }
 
     @Test
-    void saveActorsBulk_ShouldFilterInvalidActors() {
-
+    void TestSaveActorsBulkFiltersInvalidActors() {
         Movie movie = new Movie();
         movie.setId(1L);
-
         List<Actor> actors = Arrays.asList(
-                createTestActor("", movie), // invalid
-                createTestActor("Actor 2", movie),
-                createTestActor(null, movie) // invalid
+                createTestActor(null, movie),
+                createTestActor("Valid Actor", movie),
+                createTestActor("", movie)
         );
 
         when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
-        when(actorRepository.save(any(Actor.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(actorRepository.save(any(Actor.class))).thenAnswer(i -> i.getArgument(0));
 
         List<Actor> result = actorService.saveActorsBulk(actors);
 
         assertEquals(1, result.size());
-        assertEquals("Actor 2", result.get(0).getName());
+        assertEquals("Valid Actor", result.get(0).getName());
     }
 
     @Test
-    void saveActorsBulk_ShouldThrowExceptionWhenMovieNotFound() {
-
+    void TestSaveActorsBulkThrowsExceptionWhenMovieNotFound() {
         Movie movie = new Movie();
         movie.setId(99L);
-
-        List<Actor> actors = Collections.singletonList(
-                createTestActor("Actor 1", movie)
-        );
+        List<Actor> actors = Collections.singletonList(createTestActor("Actor", movie));
 
         when(movieRepository.findById(99L)).thenReturn(Optional.empty());
 

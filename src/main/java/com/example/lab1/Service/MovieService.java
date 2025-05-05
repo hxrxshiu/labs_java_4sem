@@ -25,6 +25,7 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
+    private final RequestCounter requestCounter;
 
     @Value("${movie-database.api.url}")
     private String omdbApiUrl;
@@ -32,14 +33,19 @@ public class MovieService {
     @Value("${movie-database.api.key}")
     private String omdbApiKey;
 
-    @Cacheable(value = CacheNames.MOVIES, key = "'all'")
     public List<Movie> getAllMovies() {
+        requestCounter.increment();
         log.debug("Fetching all movies from database");
         return movieRepository.findAll();
     }
 
-    @Cacheable(value = CacheNames.MOVIE_INFO, key = "#title.toLowerCase()")
+    @Cacheable(value = CacheNames.MOVIES, key = "'all'")
+    public List<Movie> getAllMoviesCached() {
+        return getAllMovies();
+    }
+
     public String getMovieInfoByTitle(String title) {
+        requestCounter.increment();
         log.info("Fetching movie info for title: {}", title);
         String requestUrl = String.format("%s?t=%s&apikey=%s", omdbApiUrl, title, omdbApiKey);
 
@@ -57,6 +63,7 @@ public class MovieService {
     @CacheEvict(value = CacheNames.MOVIES, key = "'all'")
     @Transactional
     public Movie saveMovie(Movie movie) {
+        requestCounter.increment();
         log.info("Saving movie: {}", movie.getTitle());
         return movieRepository.save(movie);
     }
@@ -64,6 +71,7 @@ public class MovieService {
     @CacheEvict(value = CacheNames.MOVIES, key = "'all'")
     @Transactional
     public void deleteMovie(Long id) {
+        requestCounter.increment();
         log.info("Deleting movie with ID: {}", id);
         if (!movieRepository.existsById(id)) {
             throw new EntityNotFoundException("Movie not found with id: " + id);
@@ -74,6 +82,7 @@ public class MovieService {
     @CacheEvict(value = CacheNames.MOVIES, key = "'all'")
     @Transactional
     public List<Movie> saveMoviesBulk(List<Movie> movies) {
+        requestCounter.increment();
         log.info("Saving {} movies in bulk", movies.size());
 
         return movies.stream()
@@ -98,3 +107,4 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 }
+

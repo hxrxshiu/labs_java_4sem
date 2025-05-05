@@ -2,7 +2,6 @@ package com.example.lab1.Controller;
 
 import com.example.lab1.Entity.Actor;
 import com.example.lab1.Service.ActorService;
-import com.example.lab1.Service.RequestCounter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,13 +28,11 @@ import java.util.List;
 public class ActorController {
 
     private final ActorService actorService;
-    private final RequestCounter requestCounter;
 
     @Operation(summary = "Get all actors")
     @ApiResponse(responseCode = "200", description = "List of all actors")
     @GetMapping
     public ResponseEntity<List<Actor>> getAllActors() {
-        requestCounter.increment();
         return ResponseEntity.ok(actorService.getAllActors());
     }
 
@@ -44,11 +41,8 @@ public class ActorController {
     @ApiResponse(responseCode = "404", description = "Movie not found")
     @GetMapping("/movie/{movieId}")
     public ResponseEntity<List<Actor>> getActorsByMovie(
-            @Parameter(description = "ID of the movie",
-                    required = true,
-                    example = "1")
+            @Parameter(description = "ID of the movie", required = true, example = "1")
             @PathVariable Long movieId) {
-        requestCounter.increment();
         return ResponseEntity.ok(actorService.getActorsByMovieId(movieId));
     }
 
@@ -57,11 +51,8 @@ public class ActorController {
     @ApiResponse(responseCode = "400", description = "Invalid name parameter")
     @GetMapping("/search")
     public ResponseEntity<List<Actor>> searchActorsByName(
-            @Parameter(description = "Name or part of name to search",
-                    required = true,
-                    example = "John")
+            @Parameter(description = "Name or part of name to search", required = true, example = "John")
             @RequestParam String name) {
-        requestCounter.increment();
         return ResponseEntity.ok(actorService.findActorsByNameContaining(name));
     }
 
@@ -75,11 +66,8 @@ public class ActorController {
                     description = "Actor data to create",
                     required = true)
             @Valid @RequestBody Actor actor,
-            @Parameter(description = "ID of the associated movie",
-                    required = true,
-                    example = "1")
+            @Parameter(description = "ID of the associated movie", required = true, example = "1")
             @PathVariable Long movieId) {
-        requestCounter.increment();
         return new ResponseEntity<>(actorService.saveActor(actor, movieId), HttpStatus.CREATED);
     }
 
@@ -88,11 +76,8 @@ public class ActorController {
     @ApiResponse(responseCode = "404", description = "Actor not found")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteActor(
-            @Parameter(description = "ID of the actor to delete",
-                    required = true,
-                    example = "1")
+            @Parameter(description = "ID of the actor to delete", required = true, example = "1")
             @PathVariable Long id) {
-        requestCounter.increment();
         actorService.deleteActor(id);
         return ResponseEntity.noContent().build();
     }
@@ -106,7 +91,6 @@ public class ActorController {
                     description = "List of actor data to create",
                     required = true)
             @Valid @RequestBody List<Actor> actors) {
-        requestCounter.increment();
         return new ResponseEntity<>(actorService.saveActorsBulk(actors), HttpStatus.CREATED);
     }
 }

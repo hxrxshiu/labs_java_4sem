@@ -2,7 +2,6 @@ package com.example.lab1.Controller;
 
 import com.example.lab1.Entity.Movie;
 import com.example.lab1.Service.MovieService;
-import com.example.lab1.Service.RequestCounter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,7 +28,6 @@ import java.util.List;
 public class MovieController {
 
     private final MovieService movieService;
-    private final RequestCounter requestCounter;
 
     @Operation(summary = "Search movie info",
             description = "Fetches movie data from external API")
@@ -39,7 +37,6 @@ public class MovieController {
     public ResponseEntity<String> searchMovie(
             @Parameter(description = "Movie title to search", required = true, example = "Inception")
             @RequestParam String title) {
-        requestCounter.increment();
         return ResponseEntity.ok(movieService.getMovieInfoByTitle(title));
     }
 
@@ -47,7 +44,6 @@ public class MovieController {
     @ApiResponse(responseCode = "200", description = "List of all movies")
     @GetMapping
     public ResponseEntity<List<Movie>> getAllMovies() {
-        requestCounter.increment();
         return ResponseEntity.ok(movieService.getAllMovies());
     }
 
@@ -60,7 +56,6 @@ public class MovieController {
                     description = "Movie data to create",
                     required = true)
             @Valid @RequestBody Movie movie) {
-        requestCounter.increment();
         return new ResponseEntity<>(movieService.saveMovie(movie), HttpStatus.CREATED);
     }
 
@@ -69,11 +64,8 @@ public class MovieController {
     @ApiResponse(responseCode = "404", description = "Movie not found")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovie(
-            @Parameter(description = "ID of the movie to delete",
-                    required = true,
-                    example = "1")
+            @Parameter(description = "ID of the movie to delete", required = true, example = "1")
             @PathVariable Long id) {
-        requestCounter.increment();
         movieService.deleteMovie(id);
         return ResponseEntity.noContent().build();
     }
@@ -87,7 +79,6 @@ public class MovieController {
                     description = "List of movie data to create",
                     required = true)
             @Valid @RequestBody List<Movie> movies) {
-        requestCounter.increment();
         return new ResponseEntity<>(movieService.saveMoviesBulk(movies), HttpStatus.CREATED);
     }
 }

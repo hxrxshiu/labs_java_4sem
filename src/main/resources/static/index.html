@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie & Actor Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Movie & Actor Manager</h1>
+
+<section>
+    <h2>All Movies</h2>
+    <button onclick="fetchMovies()">Refresh</button>
+    <ul id="movie-list"></ul>
+</section>
+
+<section>
+    <h2>Add Movie</h2>
+    <label for="movie-title">Movie Title:</label>
+    <input type="text" id="movie-title" placeholder="Movie Title">
+    <button onclick="addMovie()">Add Movie</button>
+</section>
+
+<section>
+    <h2>Add Actor</h2>
+    <label for="actor-name">Actor Name:</label>
+    <input type="text" id="actor-name" placeholder="Actor Name">
+
+    <label for="actor-movie-id">Movie ID:</label>
+    <input type="number" id="actor-movie-id" placeholder="Movie ID">
+
+    <button onclick="addActor()">Add Actor</button>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>

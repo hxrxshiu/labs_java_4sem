@@ -23,21 +23,32 @@ public class ActorService {
 
     private final ActorRepository actorRepository;
     private final MovieRepository movieRepository;
+    private final RequestCounter requestCounter;
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'all'")
     public List<Actor> getAllActors() {
+        requestCounter.increment();
         log.debug("Fetching all actors from database");
         return actorRepository.findAll();
     }
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'movie_' + #movieId")
+    @Cacheable(value = CacheNames.ACTORS, key = "'all'")
+    public List<Actor> getAllActorsCached() {
+        return getAllActors();
+    }
+
     public List<Actor> getActorsByMovieId(Long movieId) {
+        requestCounter.increment();
         log.debug("Fetching actors for movie ID: {}", movieId);
         return actorRepository.findByMovieId(movieId);
     }
 
-    @Cacheable(value = CacheNames.ACTORS, key = "'search_' + #namePart.toLowerCase()")
+    @Cacheable(value = CacheNames.ACTORS, key = "'movie_' + #movieId")
+    public List<Actor> getActorsByMovieIdCached(Long movieId) {
+        return getActorsByMovieId(movieId);
+    }
+
     public List<Actor> findActorsByNameContaining(String namePart) {
+        requestCounter.increment();
         log.debug("Searching actors containing name: {}", namePart);
         if (namePart == null || namePart.trim().isEmpty()) {
             throw new IllegalArgumentException("Name parameter cannot be empty");
@@ -45,9 +56,15 @@ public class ActorService {
         return actorRepository.findByNameContainingIgnoreCase(namePart);
     }
 
+    @Cacheable(value = CacheNames.ACTORS, key = "'search_' + #namePart.toLowerCase()")
+    public List<Actor> findActorsByNameContainingCached(String namePart) {
+        return findActorsByNameContaining(namePart);
+    }
+
     @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
     @Transactional
     public Actor saveActor(Actor actor, Long movieId) {
+        requestCounter.increment();
         log.info("Saving actor: {} for movie ID: {}", actor.getName(), movieId);
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new EntityNotFoundException("Movie not found with id: " + movieId));
@@ -58,6 +75,7 @@ public class ActorService {
     @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
     @Transactional
     public void deleteActor(Long id) {
+        requestCounter.increment();
         log.info("Deleting actor with ID: {}", id);
         if (!actorRepository.existsById(id)) {
             throw new EntityNotFoundException("Actor not found with id: " + id);
@@ -68,6 +86,7 @@ public class ActorService {
     @CacheEvict(value = CacheNames.ACTORS, allEntries = true)
     @Transactional
     public List<Actor> saveActorsBulk(List<Actor> actors) {
+        requestCounter.increment();
         log.info("Saving {} actors in bulk", actors.size());
 
         return actors.stream()

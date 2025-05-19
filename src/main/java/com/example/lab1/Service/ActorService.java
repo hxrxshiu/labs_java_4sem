@@ -33,6 +33,7 @@ public class ActorService {
     }
 
     public List<Actor> getAllActors() {
+        requestCounter.increment();
         return getAllActorsCached();
     }
 
@@ -44,6 +45,7 @@ public class ActorService {
     }
 
     public List<Actor> getActorsByMovieId(Long movieId) {
+        requestCounter.increment();
         return getActorsByMovieIdCached(movieId);
     }
 
@@ -58,6 +60,7 @@ public class ActorService {
     }
 
     public List<Actor> findActorsByNameContaining(String namePart) {
+        requestCounter.increment();
         return findActorsByNameContainingCached(namePart);
     }
 
@@ -109,4 +112,3 @@ public class ActorService {
                 .collect(Collectors.toList());
     }
 }
-

@@ -41,6 +41,7 @@ public class MovieService {
     }
 
     public List<Movie> getAllMovies() {
+        requestCounter.increment();
         return getAllMoviesCached();
     }
 

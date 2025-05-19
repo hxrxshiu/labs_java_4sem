@@ -3,6 +3,7 @@ package com.example.lab1.Controller;
 import com.example.lab1.Service.RequestCounter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,5 +20,10 @@ public class RequestController {
     public String getRequestCount() {
         return "Total requests: " + requestCounter.getCount();
     }
-}
 
+    @PostMapping("/counter/reset")
+    public String resetRequestCount() {
+        requestCounter.reset();
+        return "Counter has been reset to 0";
+    }
+}

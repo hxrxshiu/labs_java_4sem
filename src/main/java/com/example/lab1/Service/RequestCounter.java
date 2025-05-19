@@ -12,4 +12,8 @@ public class RequestCounter {
     public synchronized int getCount() {
         return count;
     }
+
+    public synchronized void reset() {
+        count = 0;
+    }
 }

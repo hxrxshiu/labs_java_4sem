@@ -119,7 +119,6 @@ async function deleteMovie(id) {
         alert('Error deleting movie');
     }
 }
-
 async function deleteActor(id) {
     try {
         const response = await fetch(`${apiBase}/actors/${id}`, { method: 'DELETE' });
